@@ -1,0 +1,39 @@
+name: ci-cd-appservice
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Build & Unit Tests
+        run: mvn -B -DskipTests=false clean test package
+      - name: Publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: target/*.jar
+
+  deploy:
+    needs: build-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: .
+      - name: Azure WebApp Deploy
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-sprint4-rm556620   # troque se necessário
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: "*.jar"
