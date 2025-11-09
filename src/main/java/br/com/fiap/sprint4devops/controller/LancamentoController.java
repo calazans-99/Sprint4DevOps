@@ -26,58 +26,45 @@ public class LancamentoController {
 
     @GetMapping("/lancamentos")
     public ResponseEntity<List<Lancamento>> listar() {
-        List<Lancamento> lista = lancRepo.findAll();
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(lancRepo.findAll());
     }
 
     @GetMapping("/lancamentos/conta/{idConta}")
     public ResponseEntity<List<Lancamento>> listarPorConta(@PathVariable Long idConta) {
         Conta conta = contaRepo.findById(idConta).orElseThrow();
-        List<Lancamento> lista = lancRepo.findByConta(conta);
-        return ResponseEntity.ok(lista);
+        return ResponseEntity.ok(lancRepo.findByConta(conta));
     }
 
-    @PostMapping("/lancamentos")
-    public ResponseEntity<Lancamento> criar(@Valid @RequestBody Lancamento body) {
-        // Se vier apenas id da conta dentro do body, garante entidade gerenciada
-        if (body.getConta() != null && body.getConta().getId() != null) {
-            Conta conta = contaRepo.findById(body.getConta().getId()).orElseThrow();
-            body.setConta(conta);
-        }
-        Lancamento salvo = lancRepo.save(body);
-        return ResponseEntity
-                .created(URI.create("/api/lancamentos/" + salvo.getId()))
-                .body(salvo);
+    @PostMapping("/contas/{idConta}/lancamentos")
+    public ResponseEntity<Lancamento> criar(@PathVariable Long idConta, @Valid @RequestBody Lancamento lanc) {
+        Conta conta = contaRepo.findById(idConta).orElseThrow();
+        lanc.setConta(conta);
+        Lancamento salvo = lancRepo.save(lanc);
+        return ResponseEntity.created(URI.create("/api/lancamentos/" + salvo.getId())).body(salvo);
     }
 
     @GetMapping("/lancamentos/{id}")
     public ResponseEntity<Lancamento> buscar(@PathVariable Long id) {
-        Lancamento l = lancRepo.findById(id).orElseThrow();
-        return ResponseEntity.ok(l);
+        return ResponseEntity.ok(lancRepo.findById(id).orElseThrow());
     }
 
     @PutMapping("/lancamentos/{id}")
     public ResponseEntity<Lancamento> atualizar(@PathVariable Long id, @Valid @RequestBody Lancamento body) {
         Lancamento l = lancRepo.findById(id).orElseThrow();
-        // copie apenas os campos editáveis
-        l.setTipo(body.getTipo());
-        l.setValor(body.getValor());
         l.setDescricao(body.getDescricao());
-        // se permitir troca de conta:
+        l.setValor(body.getValor());
         if (body.getConta() != null && body.getConta().getId() != null) {
             Conta conta = contaRepo.findById(body.getConta().getId()).orElseThrow();
             l.setConta(conta);
         }
-        Lancamento atualizado = lancRepo.save(l);
-        return ResponseEntity.ok(atualizado);
+        return ResponseEntity.ok(lancRepo.save(l));
     }
 
     @DeleteMapping("/lancamentos/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (!lancRepo.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        if (lancRepo.existsById(id)) {
+            lancRepo.deleteById(id);
         }
-        lancRepo.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }
