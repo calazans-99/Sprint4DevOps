@@ -1,7 +1,8 @@
-package br.com.fiap.sprint4devops.model;
+package br.com.fiap.sprint4devops.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,56 +18,28 @@ public class Conta {
     @Column(name = "nome_titular", nullable = false, length = 120)
     private String nomeTitular;
 
-    @Column(name = "email", nullable = false, length = 160)
+    @Column(name = "email", nullable = false, length = 160, columnDefinition = "NVARCHAR(160)")
     private String email;
 
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
-    @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Lancamento> lancamentos;
-    // =========================
-    // Getters e Setters
-    // =========================
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNomeTitular() { return nomeTitular; }
+    public void setNomeTitular(String nomeTitular) { this.nomeTitular = nomeTitular; }
 
-    public String getNomeTitular() {
-        return nomeTitular;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setNomeTitular(String nomeTitular) {
-        this.nomeTitular = nomeTitular;
-    }
+    public LocalDateTime getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
-    }
-
-    public List<Lancamento> getLancamentos() {
-        return lancamentos;
-    }
-
-    public void setLancamentos(List<Lancamento> lancamentos) {
-        this.lancamentos = lancamentos;
-    }
+    public List<Lancamento> getLancamentos() { return lancamentos; }
+    public void setLancamentos(List<Lancamento> lancamentos) { this.lancamentos = lancamentos; }
 }
