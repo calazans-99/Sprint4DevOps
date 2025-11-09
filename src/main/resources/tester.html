@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teste de API – Sprint4DevOps</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    body { margin: 0; background: #0f172a; color: #e2e8f0; }
+    .wrap { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+    .row { display: grid; gap: 12px; }
+    @media (min-width: 720px){ .row-2 { grid-template-columns: 1fr 1fr; } .row-3 { grid-template-columns: 1fr 1fr 1fr; } }
+    label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #334155; border-radius: 10px; background: #0b1220; color: #e2e8f0; }
+    input:focus, textarea:focus, select:focus { outline: 2px solid #3b82f6; border-color: #3b82f6; }
+    button { appearance: none; border: 0; background: #2563eb; color: #fff; padding: 10px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    button.secondary { background: #475569; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .title { font-size: 22px; font-weight: 700; margin: 10px 0 6px; }
+    .hint { color: #94a3b8; font-size: 12px; }
+    .bad { color: #fca5a5; }
+    .good { color: #86efac; }
+    pre { background: #0b1220; border: 1px solid #1f2937; padding: 12px; border-radius: 10px; overflow: auto; }
+    .pill { font-size: 12px; background: #0b1220; border: 1px solid #334155; padding: 4px 8px; border-radius: 999px; display: inline-block; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="title">Teste de API – Sprint4DevOps
+        <span class="pill" id="status-pill">base: <em>auto</em></span>
+      </div>
+      <div class="row row-2">
+        <div>
+          <label for="baseUrl">Base URL da API</label>
+          <input id="baseUrl" placeholder="https://app-sprint4-xxxx.azurewebsites.net" />
+          <div class="hint">Deixe vazio para usar automaticamente <code>window.location.origin</code>. Os endpoints usam o prefixo <b>/api</b>.</div>
+        </div>
+        <div style="align-self:end">
+          <button id="btnPing" class="secondary">Detectar base automaticamente</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contas -->
+    <div class="card">
+      <div class="title">Contas</div>
+
+      <div class="row row-3">
+        <div>
+          <label for="nomeTitular">Nome do titular</label>
+          <input id="nomeTitular" placeholder="Ana" />
+        </div>
+        <div>
+          <label for="email">E-mail</label>
+          <input id="email" placeholder="ana@example.com" />
+        </div>
+        <div style="align-self:end">
+          <button id="btnCriarConta">Criar conta (POST /api/contas)</button>
+        </div>
+      </div>
+
+      <div class="row row-2" style="margin-top:12px">
+        <div>
+          <button id="btnListarContas" class="secondary">Listar contas (GET /api/contas)</button>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr auto">
+          <div>
+            <label for="contaId">ID da conta</label>
+            <input id="contaId" type="number" min="1" placeholder="1" />
+          </div>
+          <div style="align-self:end">
+            <button id="btnBuscarConta">Buscar por ID (GET /api/contas/{id})</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lançamentos -->
+    <div class="card">
+      <div class="title">Lançamentos</div>
+
+      <div class="row row-3">
+        <div>
+          <label for="contaIdLanc">ID da conta</label>
+          <input id="contaIdLanc" type="number" min="1" placeholder="1" />
+        </div>
+        <div>
+          <label for="tipoLanc">Tipo</label>
+          <select id="tipoLanc">
+            <option value="C">Crédito (C)</option>
+            <option value="D">Débito (D)</option>
+          </select>
+        </div>
+        <div>
+          <label for="valorLanc">Valor</label>
+          <input id="valorLanc" type="number" step="0.01" placeholder="100.50" />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <div>
+          <label for="descLanc">Descrição</label>
+          <input id="descLanc" placeholder="Depósito inicial" />
+        </div>
+      </div>
+
+      <div class="row row-2" style="margin-top:12px">
+        <div>
+          <button id="btnCriarLanc">Criar lançamento (POST /api/contas/{idConta}/lancamentos)</button>
+        </div>
+        <div class="row" style="grid-template-columns: 1fr auto">
+          <div>
+            <label for="contaIdList">ID da conta</label>
+            <input id="contaIdList" type="number" min="1" placeholder="1" />
+          </div>
+          <div style="align-self:end">
+            <button id="btnListarLancs" class="secondary">Listar lançamentos (GET /api/contas/{idConta}/lancamentos)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado -->
+    <div class="card">
+      <div class="title">Resultado</div>
+      <div class="hint" id="meta"></div>
+      <pre id="out">{ }</pre>
+    </div>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    const meta = document.getElementById('meta');
+    const statusPill = document.getElementById('status-pill');
+
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => (($(id).value || '').trim());
+
+    function resolveBase() {
+      const manual = val('baseUrl');
+      const base = manual || window.location.origin;
+      statusPill.innerHTML = 'base: <b>' + base + '</b>';
+      return base;
+    }
+
+    async function call(method, path, body) {
+      const base = resolveBase();
+      const url = base.replace(/\/+$/, '') + path;
+      const opts = { method, headers: { 'Accept': 'application/json' } };
+      if (body !== undefined) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      const t0 = performance.now();
+      let res;
+      try {
+        res = await fetch(url, opts);
+      } catch (e) {
+        out.textContent = 'Erro de rede: ' + e;
+        meta.innerHTML = `<span class="bad">Falha</span> ${method} ${path}`;
+        return;
+      }
+      const ms = Math.round(performance.now() - t0);
+      const ct = res.headers.get('content-type') || '';
+      let payload;
+      try {
+        payload = ct.includes('application/json') ? await res.json() : await res.text();
+      } catch {
+        payload = '(sem corpo)';
+      }
+      meta.innerHTML = `${method} ${path} • status: <b>${res.status}</b> • ${ms}ms`;
+      out.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+    }
+
+    // Botões
+    $('btnPing').onclick = () => { resolveBase(); };
+
+    $('btnCriarConta').onclick = () => {
+      const nomeTitular = val('nomeTitular');
+      const email = val('email');
+      if (!nomeTitular || !email) {
+        meta.innerHTML = '<span class="bad">Preencha nome e e-mail.</span>';
+        return;
+      }
+      call('POST', '/api/contas', { nomeTitular, email });
+    };
+
+    $('btnListarContas').onclick = () => call('GET', '/api/contas');
+
+    $('btnBuscarConta').onclick = () => {
+      const id = val('contaId');
+      if (!id) { meta.innerHTML = '<span class="bad">Informe o ID.</span>'; return; }
+      call('GET', `/api/contas/${encodeURIComponent(id)}`);
+    };
+
+    $('btnCriarLanc').onclick = () => {
+      const idConta = val('contaIdLanc');
+      const tipo = val('tipoLanc');
+      const valor = val('valorLanc');
+      const descricao = val('descLanc');
+      if (!idConta || !tipo || !valor) {
+        meta.innerHTML = '<span class="bad">Preencha conta, tipo e valor.</span>';
+        return;
+      }
+      call('POST', `/api/contas/${encodeURIComponent(idConta)}/lancamentos`, {
+        tipo, valor: Number(valor), descricao
+      });
+    };
+
+    $('btnListarLancs').onclick = () => {
+      const idConta = val('contaIdList');
+      if (!idConta) { meta.innerHTML = '<span class="bad">Informe o ID da conta.</span>'; return; }
+      call('GET', `/api/contas/${encodeURIComponent(idConta)}/lancamentos`);
+    };
+
+    // Inicial
+    resolveBase();
+  </script>
+</body>
+</html>
