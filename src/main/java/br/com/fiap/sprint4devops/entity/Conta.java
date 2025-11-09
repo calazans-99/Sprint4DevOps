@@ -1,11 +1,12 @@
 package br.com.fiap.sprint4devops.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "Conta")
+@Table(name = "conta", schema = "dbo")
 public class Conta {
 
     @Id
@@ -16,15 +17,15 @@ public class Conta {
     @Column(name = "nome_titular", nullable = false, length = 120)
     private String nomeTitular;
 
-    @Column(nullable = false, length = 160)
+    @Column(name = "email", nullable = false, length = 160)
     private String email;
 
-    @Column(name = "criado_em", nullable = false)
-    private LocalDateTime criadoEm = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "criado_em", nullable = false, updatable = false)
+    private LocalDateTime criadoEm;
 
     @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Lancamento> lancamentos;
-
     // =========================
     // Getters e Setters
     // =========================
