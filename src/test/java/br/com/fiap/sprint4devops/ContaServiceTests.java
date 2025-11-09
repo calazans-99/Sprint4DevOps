@@ -21,8 +21,11 @@ class ContaServiceTests {
         Conta c = new Conta();
         c.setNomeTitular("Ana");
         c.setEmail("ana@example.com");
+
         Conta salvo = repo.save(c);
-        assertThat(salvo.getIdConta()).isNotNull();
+
+        // trocado: getIdConta() -> getId()
+        assertThat(salvo.getId()).isNotNull();
         assertThat(repo.findByEmail("ana@example.com")).isPresent();
     }
 }
