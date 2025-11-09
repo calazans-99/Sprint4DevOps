@@ -21,8 +21,7 @@ public class ContaController {
 
     @GetMapping
     public ResponseEntity<List<Conta>> listar() {
-        List<Conta> contas = service.listar();
-        return ResponseEntity.ok(contas);
+        return ResponseEntity.ok(service.listar());
     }
 
     @PostMapping
@@ -33,14 +32,12 @@ public class ContaController {
 
     @GetMapping("{id}")
     public ResponseEntity<Conta> buscar(@PathVariable Long id) {
-        Conta c = service.buscar(id);
-        return ResponseEntity.ok(c);
+        return ResponseEntity.ok(service.buscar(id));
     }
 
     @PutMapping("{id}")
     public ResponseEntity<Conta> atualizar(@PathVariable Long id, @Valid @RequestBody Conta conta) {
-        Conta atualizada = service.atualizar(id, conta);
-        return ResponseEntity.ok(atualizada);
+        return ResponseEntity.ok(service.atualizar(id, conta));
     }
 
     @DeleteMapping("{id}")
