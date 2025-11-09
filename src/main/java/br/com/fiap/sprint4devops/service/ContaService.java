@@ -1,36 +1,34 @@
 package br.com.fiap.sprint4devops.service;
 
-import br.com.fiap.sprint4devops.entity.Conta;
+import br.com.fiap.sprint4devops.model.Conta;
 import br.com.fiap.sprint4devops.repository.ContaRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class ContaService {
 
-    private final ContaRepository repo;
+    private final ContaRepository contaRepository;
 
-    public ContaService(ContaRepository repo) {
-        this.repo = repo;
+    public ContaService(ContaRepository contaRepository) {
+        this.contaRepository = contaRepository;
     }
 
-    @Transactional
-    public Conta criar(Conta c) { return repo.save(c); }
-
-    public List<Conta> listar() { return repo.findAll(); }
-
-    public Conta buscar(Long id) { return repo.findById(id).orElseThrow(); }
-
-    @Transactional
-    public Conta atualizar(Long id, Conta dados) {
-        Conta c = buscar(id);
-        c.setNomeTitular(dados.getNomeTitular());
-        c.setEmail(dados.getEmail());
-        return repo.save(c);
+    public Conta criar(Conta conta) {
+        return contaRepository.save(conta);
     }
 
-    @Transactional
-    public void deletar(Long id) { repo.deleteById(id); }
+    public List<Conta> listar() {
+        return contaRepository.findAll();
+    }
+
+    public Conta buscarPorId(Long id) {
+        return contaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Conta não encontrada"));
+    }
+
+    public void excluir(Long id) {
+        contaRepository.deleteById(id);
+    }
 }
