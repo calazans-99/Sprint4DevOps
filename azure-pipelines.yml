@@ -8,14 +8,18 @@ trigger:
       - main
 
 variables:
-  azureSubscription: 'SC_Sprint4DevOps'      # nome da Service Connection
-  appName: 'app-sprint4-rm556620'            # nome do seu App Service
-  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'  # caminho do artefato
+  azureSubscription: 'SC_Sprint4DevOps'                 # Service Connection
+  appName: 'app-sprint4-rm556620'                       # App Service
+  artifactName: 'drop'
+  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'    # caminho do .jar publicado
 
 pool:
   vmImage: 'ubuntu-latest'
 
 stages:
+# =========================
+# BUILD
+# =========================
   - stage: Build
     displayName: 'Build & Test'
     jobs:
@@ -24,24 +28,59 @@ stages:
         steps:
           - checkout: self
 
-          # Substitui o UseJavaVersion@1 (task antiga)
+          # Java 17
           - task: JavaToolInstaller@0
+            displayName: 'Set Java 17'
             inputs:
               versionSpec: '17'
               jdkArchitectureOption: 'x64'
               jdkSourceOption: 'PreInstalled'
 
-          # Gera JAR executável (spring-boot:repackage)
-          - script: mvn -B -DskipTests=false clean test package spring-boot:repackage
-            displayName: 'Maven test & package (boot repackage)'
+          # Cache do repositório Maven (~/.m2/repository)
+          - task: Cache@2
+            displayName: 'Cache Maven local (~/.m2)'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | **/pom.xml'
+              path: ~/.m2/repository
+              restoreKeys: |
+                maven | "$(Agent.OS)"
 
+          # Limpa artefato possivelmente corrompido (caso do byte-buddy)
+          - bash: |
+              rm -rf ~/.m2/repository/net/bytebuddy/byte-buddy || true
+            displayName: 'Limpa cache corrompido (byte-buddy)'
+
+          # Build com retries e transporte estável
+          - task: Maven@4
+            displayName: 'Maven test & package (boot repackage)'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean test package spring-boot:repackage'
+              options: >
+                -U --batch-mode --no-transfer-progress
+                -Dmaven.wagon.http.retryHandler.count=5
+                -Dmaven.wagon.http.pool=false
+                -Dmaven.wagon.http.timeout=120000
+                -Dmaven.wagon.httpconnectionManager.ttlSeconds=120
+                -Dmaven.resolver.transport=wagon
+                -Dhttps.protocols=TLSv1.2
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              mavenOptions: '-Xms256m -Xmx1024m'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+          # Publica somente os .jar do target como artefato "drop"
           - task: PublishBuildArtifacts@1
             displayName: 'Publicar artefato (.jar)'
             inputs:
               PathtoPublish: 'target'
-              ArtifactName: 'drop'
+              ArtifactName: '$(artifactName)'
               publishLocation: 'Container'
 
+# =========================
+# DEPLOY
+# =========================
   - stage: Deploy
     displayName: 'Deploy to App Service'
     dependsOn: Build
@@ -55,11 +94,16 @@ stages:
             deploy:
               steps:
                 - download: current
-                  artifact: drop
+                  artifact: $(artifactName)
+
+                # (Opcional) mostra qual .jar foi baixado
+                - bash: ls -lah $(Pipeline.Workspace)/$(artifactName)/
+                  displayName: 'Listar artefato baixado'
+
                 - task: AzureWebApp@1
                   displayName: 'Azure WebApp Deploy (.jar)'
                   inputs:
                     azureSubscription: '$(azureSubscription)'
                     appType: 'webAppLinux'
                     appName: '$(appName)'
-                    package: '$(packagePath)' 
+                    package: '$(packagePath)'
