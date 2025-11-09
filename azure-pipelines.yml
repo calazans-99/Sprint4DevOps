@@ -1,60 +1,65 @@
 # Azure DevOps Pipeline (YAML) – Sprint4DevOps
+# CI: build + testes + artefato
+# CD: deploy para Azure App Service (Linux) – Java 17 (Spring Boot .jar)
+
 trigger:
   branches:
     include:
       - main
 
 variables:
-  azureSubscription: 'SC_Sprint4DevOps'
-  appName: 'app-sprint4-rm556620'
-  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'   # mais seguro
+  azureSubscription: 'SC_Sprint4DevOps'      # nome da Service Connection
+  appName: 'app-sprint4-rm556620'            # nome do seu App Service
+  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'  # caminho do artefato
 
 pool:
   vmImage: 'ubuntu-latest'
 
 stages:
-- stage: Build
-  displayName: 'Build & Test'
-  jobs:
-  - job: Build
-    displayName: 'Maven build + tests'
-    steps:
-    - checkout: self
+  - stage: Build
+    displayName: 'Build & Test'
+    jobs:
+      - job: Build
+        displayName: 'Maven build + tests'
+        steps:
+          - checkout: self
 
-    - task: JavaToolInstaller@0
-      inputs:
-        versionSpec: '17'
-        jdkArchitectureOption: 'x64'
-        jdkSourceOption: 'PreInstalled'
-
-    - script: mvn -B -DskipTests=false clean test package
-      displayName: 'Maven test & package'
-
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publicar artefato (.jar)'
-      inputs:
-        PathtoPublish: 'target'
-        ArtifactName: 'drop'
-        publishLocation: 'Container'
-
-- stage: Deploy
-  displayName: 'Deploy to App Service'
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: DeployToProd
-    displayName: 'Deploy – $(appName)'
-    environment: 'production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - download: current
-            artifact: drop
-          - task: AzureWebApp@1
-            displayName: 'Azure WebApp Deploy (.jar)'
+          # Substitui o UseJavaVersion@1 (task antiga)
+          - task: JavaToolInstaller@0
             inputs:
-              azureSubscription: '$(azureSubscription)'
-              appType: 'webAppLinux'
-              appName: '$(appName)'
-              package: '$(packagePath)'
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          # Gera JAR executável (spring-boot:repackage)
+          - script: mvn -B -DskipTests=false clean test package spring-boot:repackage
+            displayName: 'Maven test & package (boot repackage)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publicar artefato (.jar)'
+            inputs:
+              PathtoPublish: 'target'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: Deploy
+    displayName: 'Deploy to App Service'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToProd
+        displayName: 'Deploy – $(appName)'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+                - task: AzureWebApp@1
+                  displayName: 'Azure WebApp Deploy (.jar)'
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(appName)'
+                    package: '$(packagePath)'
