@@ -1,43 +1,87 @@
-package br.com.fiap.sprint4devops.entity;
+package br.com.fiap.sprint4devops.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Lancamento")
 public class Lancamento {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idLcto;
+    @Column(name = "id")
+    private Long id;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "id_conta", nullable = false)
+    @JoinColumn(name = "conta_id", nullable = false)
     private Conta conta;
 
-    @NotNull
-    @Column(length = 1)
-    private Character tipo; // 'C' crédito, 'D' débito
+    @Column(nullable = false, length = 1)
+    private String tipo; // 'C' (Crédito) ou 'D' (Débito)
 
-    @DecimalMin("0.01")
+    @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal valor;
 
+    @Column(length = 255)
     private String descricao;
 
-    private OffsetDateTime dtEvento = OffsetDateTime.now();
+    @Column(name = "criado_em", nullable = false)
+    private LocalDateTime criadoEm = LocalDateTime.now();
 
-    public Long getIdLcto() { return idLcto; }
-    public void setIdLcto(Long idLcto) { this.idLcto = idLcto; }
-    public Conta getConta() { return conta; }
-    public void setConta(Conta conta) { this.conta = conta; }
-    public Character getTipo() { return tipo; }
-    public void setTipo(Character tipo) { this.tipo = tipo; }
-    public BigDecimal getValor() { return valor; }
-    public void setValor(BigDecimal valor) { this.valor = valor; }
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
-    public OffsetDateTime getDtEvento() { return dtEvento; }
-    public void setDtEvento(OffsetDateTime dtEvento) { this.dtEvento = dtEvento; }
+    // Constructors
+    public Lancamento() {}
+
+    public Lancamento(Conta conta, String tipo, BigDecimal valor, String descricao) {
+        this.conta = conta;
+        this.tipo = tipo;
+        this.valor = valor;
+        this.descricao = descricao;
+        this.criadoEm = LocalDateTime.now();
+    }
+
+    // Getters & Setters
+    public Long getId() {
+        return id;
+    }
+
+    public Conta getConta() {
+        return conta;
+    }
+
+    public void setConta(Conta conta) {
+        this.conta = conta;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public BigDecimal getValor() {
+        return valor;
+    }
+
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
 }
