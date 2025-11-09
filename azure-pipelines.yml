@@ -10,10 +10,11 @@ trigger:
       - main
 
 variables:
-  azureSubscription: 'SC_Sprint4DevOps'                 # Service Connection
+  azureSubscription: 'SC_Sprint4Devops'                 # Service Connection
   appName: 'app-sprint4-rm556620'                       # App Service
   artifactName: 'drop'
-  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'    # Caminho do .jar publicado
+  # O DownloadPipelineArtifact coloca o conteúdo do artefato em $(Pipeline.Workspace)/<ArtifactName>
+  packagePath: '$(Pipeline.Workspace)/$(artifactName)/**/*.jar'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -38,25 +39,25 @@ stages:
               jdkArchitectureOption: 'x64'
               jdkSourceOption: 'PreInstalled'
 
-          # Garante que o diretório Maven local exista (previne erro de cache)
-          - script: mkdir -p ~/.m2/repository
-            displayName: 'Garantir diretório Maven local'
+          # Garantir diretório do cache Maven (sem usar ~)
+          - bash: mkdir -p "$(Pipeline.Workspace)/.m2/repository"
+            displayName: 'Garantir diretório Maven local (cache)'
 
-          # Cache do repositório Maven (~/.m2/repository)
+          # Cache do repositório Maven
           - task: Cache@2
-            displayName: 'Cache Maven local (~/.m2)'
+            displayName: 'Cache Maven local'
             inputs:
               key: 'maven | "$(Agent.OS)" | **/pom.xml'
-              path: ~/.m2/repository
               restoreKeys: |
                 maven | "$(Agent.OS)"
+                maven
+              path: '$(Pipeline.Workspace)/.m2/repository'
 
-          # Limpa cache corrompido (caso do byte-buddy)
-          - bash: |
-              rm -rf ~/.m2/repository/net/bytebuddy/byte-buddy || true
+          # (Opcional) limpar pacote problemático
+          - bash: rm -rf "$(Pipeline.Workspace)/.m2/repository/net/bytebuddy/byte-buddy" || true
             displayName: 'Limpa cache corrompido (byte-buddy)'
 
-          # Build e testes (com retry e transporte estável)
+          # Build e testes
           - task: Maven@4
             displayName: 'Maven test & package (boot repackage)'
             inputs:
@@ -64,6 +65,7 @@ stages:
               goals: 'clean test package spring-boot:repackage'
               options: >
                 -U --batch-mode --no-transfer-progress
+                -Dmaven.repo.local="$(Pipeline.Workspace)/.m2/repository"
                 -Dmaven.wagon.http.retryHandler.count=5
                 -Dmaven.wagon.http.pool=false
                 -Dmaven.wagon.http.timeout=120000
@@ -73,16 +75,15 @@ stages:
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.17'
               mavenOptions: '-Xms256m -Xmx1024m'
-              publishJUnitResults: false    # 👉 pula testes se preferir (ou true se mantiver)
+              publishJUnitResults: false
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
 
-          # Publica o artefato JAR
-          - task: PublishBuildArtifacts@1
+          # Publica SOMENTE o .jar como artefato de pipeline
+          - task: PublishPipelineArtifact@1
             displayName: 'Publicar artefato (.jar)'
             inputs:
-              PathtoPublish: 'target'
-              ArtifactName: '$(artifactName)'
-              publishLocation: 'Container'
+              targetPath: 'target'
+              artifact: '$(artifactName)'
 
 # =========================
 # DEPLOY
@@ -99,14 +100,17 @@ stages:
           runOnce:
             deploy:
               steps:
-                - download: current
-                  artifact: $(artifactName)
+                - task: DownloadPipelineArtifact@2
+                  displayName: 'Baixar artefato'
+                  inputs:
+                    buildType: 'current'
+                    artifactName: '$(artifactName)'
+                    targetPath: '$(Pipeline.Workspace)/$(artifactName)'
 
-                # Mostra qual artefato foi baixado
-                - bash: ls -lah $(Pipeline.Workspace)/$(artifactName)/
+                - bash: ls -lah "$(Pipeline.Workspace)/$(artifactName)"
                   displayName: 'Listar artefato baixado'
 
-                # Deploy do .jar para o App Service Linux
+                # Deploy do .jar para App Service Linux
                 - task: AzureWebApp@1
                   displayName: 'Azure WebApp Deploy (.jar)'
                   inputs:
