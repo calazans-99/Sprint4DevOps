@@ -2,8 +2,6 @@ package br.com.fiap.sprint4devops.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "Conta")
@@ -11,7 +9,7 @@ public class Conta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id_conta")
     private Long id;
 
     @Column(name = "nome_titular", nullable = false, length = 120)
@@ -21,54 +19,18 @@ public class Conta {
     private String email;
 
     @Column(name = "criado_em", nullable = false)
-    private LocalDateTime dtCriacao = LocalDateTime.now();
+    private LocalDateTime criadoEm = LocalDateTime.now();
 
-    @OneToMany(mappedBy = "conta", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Lancamento> lancamentos = new ArrayList<>();
+    // Getters e Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    // Constructors
-    public Conta() {}
+    public String getNomeTitular() { return nomeTitular; }
+    public void setNomeTitular(String nomeTitular) { this.nomeTitular = nomeTitular; }
 
-    public Conta(String nomeTitular, String email) {
-        this.nomeTitular = nomeTitular;
-        this.email = email;
-        this.dtCriacao = LocalDateTime.now();
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    // Getters & Setters
-    public Long getId() {
-        return id;
-    }
-
-    public String getNomeTitular() {
-        return nomeTitular;
-    }
-
-    public void setNomeTitular(String nomeTitular) {
-        this.nomeTitular = nomeTitular;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public LocalDateTime getDtCriacao() {
-        return dtCriacao;
-    }
-
-    public void setDtCriacao(LocalDateTime dtCriacao) {
-        this.dtCriacao = dtCriacao;
-    }
-
-    public List<Lancamento> getLancamentos() {
-        return lancamentos;
-    }
-
-    public void setLancamentos(List<Lancamento> lancamentos) {
-        this.lancamentos = lancamentos;
-    }
+    public LocalDateTime getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
 }
