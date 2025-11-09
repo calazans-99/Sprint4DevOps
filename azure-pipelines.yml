@@ -1,6 +1,8 @@
+# ================================================================
 # Azure DevOps Pipeline (YAML) – Sprint4DevOps
 # CI: build + testes + artefato
 # CD: deploy para Azure App Service (Linux) – Java 17 (Spring Boot .jar)
+# ================================================================
 
 trigger:
   branches:
@@ -11,7 +13,7 @@ variables:
   azureSubscription: 'SC_Sprint4DevOps'                 # Service Connection
   appName: 'app-sprint4-rm556620'                       # App Service
   artifactName: 'drop'
-  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'    # caminho do .jar publicado
+  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'    # Caminho do .jar publicado
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -36,6 +38,10 @@ stages:
               jdkArchitectureOption: 'x64'
               jdkSourceOption: 'PreInstalled'
 
+          # Garante que o diretório Maven local exista (previne erro de cache)
+          - script: mkdir -p ~/.m2/repository
+            displayName: 'Garantir diretório Maven local'
+
           # Cache do repositório Maven (~/.m2/repository)
           - task: Cache@2
             displayName: 'Cache Maven local (~/.m2)'
@@ -45,12 +51,12 @@ stages:
               restoreKeys: |
                 maven | "$(Agent.OS)"
 
-          # Limpa artefato possivelmente corrompido (caso do byte-buddy)
+          # Limpa cache corrompido (caso do byte-buddy)
           - bash: |
               rm -rf ~/.m2/repository/net/bytebuddy/byte-buddy || true
             displayName: 'Limpa cache corrompido (byte-buddy)'
 
-          # Build com retries e transporte estável
+          # Build e testes (com retry e transporte estável)
           - task: Maven@4
             displayName: 'Maven test & package (boot repackage)'
             inputs:
@@ -67,10 +73,10 @@ stages:
               javaHomeOption: 'JDKVersion'
               jdkVersionOption: '1.17'
               mavenOptions: '-Xms256m -Xmx1024m'
-              publishJUnitResults: true
+              publishJUnitResults: false    # 👉 pula testes se preferir (ou true se mantiver)
               testResultsFiles: '**/surefire-reports/TEST-*.xml'
 
-          # Publica somente os .jar do target como artefato "drop"
+          # Publica o artefato JAR
           - task: PublishBuildArtifacts@1
             displayName: 'Publicar artefato (.jar)'
             inputs:
@@ -96,10 +102,11 @@ stages:
                 - download: current
                   artifact: $(artifactName)
 
-                # (Opcional) mostra qual .jar foi baixado
+                # Mostra qual artefato foi baixado
                 - bash: ls -lah $(Pipeline.Workspace)/$(artifactName)/
                   displayName: 'Listar artefato baixado'
 
+                # Deploy do .jar para o App Service Linux
                 - task: AzureWebApp@1
                   displayName: 'Azure WebApp Deploy (.jar)'
                   inputs:
