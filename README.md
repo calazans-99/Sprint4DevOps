@@ -11,6 +11,9 @@ SQL Server esperado: **sql-sprint4-rm556620**
 Resource Group: **rg-sprint4-rm556620**
 Application Insights: **ai-sprint4-rm556620**
 
+Youtube: https://youtu.be/NivIaqoZQ0c
+
+GitHub: https://github.com/calazans-99/Sprint4DevOps
 
 Aplicação de exemplo para a GS/Sprint 4 (DevOps). Inclui CRUD de **Conta** e **Lancamento** (1:N).
 
