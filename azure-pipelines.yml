@@ -1,20 +1,13 @@
 # Azure DevOps Pipeline (YAML) – Sprint4DevOps
-# CI: build + testes + artefato
-# CD: deploy para Azure App Service (Linux) – Java 17 (Spring Boot .jar)
-# Ajuste as variáveis abaixo conforme seu ambiente.
-
 trigger:
   branches:
     include:
       - main
 
 variables:
-  # 🔧 Nome da Service Connection (ARM) criada no Azure DevOps
-  azureSubscription: 'SC_Sprint4DevOps'   # <-- troque para o nome exato da sua Service connection
-  # 🌐 Nome do App Service
-  appName: 'app-sprint4-rm556620'         # já personalizado
-  # 📦 Caminho do pacote gerado pelo Maven
-  packagePath: '$(Pipeline.Workspace)/drop/*.jar'
+  azureSubscription: 'SC_Sprint4DevOps'
+  appName: 'app-sprint4-rm556620'
+  packagePath: '$(Pipeline.Workspace)/drop/**/*.jar'   # mais seguro
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -27,12 +20,16 @@ stages:
     displayName: 'Maven build + tests'
     steps:
     - checkout: self
-    - task: UseJavaVersion@1
+
+    - task: JavaToolInstaller@0
       inputs:
         versionSpec: '17'
         jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+
     - script: mvn -B -DskipTests=false clean test package
       displayName: 'Maven test & package'
+
     - task: PublishBuildArtifacts@1
       displayName: 'Publicar artefato (.jar)'
       inputs:
