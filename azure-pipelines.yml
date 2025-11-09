@@ -62,4 +62,4 @@ stages:
                     azureSubscription: '$(azureSubscription)'
                     appType: 'webAppLinux'
                     appName: '$(appName)'
-                    package: '$(packagePath)'
+                    package: '$(packagePath)' 
