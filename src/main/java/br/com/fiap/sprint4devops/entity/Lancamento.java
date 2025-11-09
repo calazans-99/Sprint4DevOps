@@ -1,82 +1,46 @@
-package br.com.fiap.sprint4devops.model;
+package br.com.fiap.sprint4devops.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Lancamento")
+@Table(name = "lancamento", schema = "dbo")
 public class Lancamento {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_lancamento")
     private Long id;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "conta_id", nullable = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_conta", nullable = false)
     private Conta conta;
 
-    @Column(nullable = false, length = 10)
-    private String tipo; // "CREDITO" ou "DEBITO"
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal valor;
-
-    @Column(length = 255)
+    @Column(name = "descricao", nullable = false, length = 200)
     private String descricao;
 
-    @Column(name = "criado_em", nullable = false)
-    private LocalDateTime criadoEm = LocalDateTime.now();
+    @Column(name = "valor", nullable = false, precision = 18, scale = 2)
+    private BigDecimal valor;
 
-    // =========================
-    // Getters e Setters
-    // =========================
+    @CreationTimestamp
+    @Column(name = "criado_em", nullable = false, updatable = false)
+    private LocalDateTime criadoEm;
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Conta getConta() { return conta; }
+    public void setConta(Conta conta) { this.conta = conta; }
 
-    public Conta getConta() {
-        return conta;
-    }
+    public String getDescricao() { return descricao; }
+    public void setDescricao(String descricao) { this.descricao = descricao; }
 
-    public void setConta(Conta conta) {
-        this.conta = conta;
-    }
+    public BigDecimal getValor() { return valor; }
+    public void setValor(BigDecimal valor) { this.valor = valor; }
 
-    public String getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(String tipo) {
-        this.tipo = tipo;
-    }
-
-    public BigDecimal getValor() {
-        return valor;
-    }
-
-    public void setValor(BigDecimal valor) {
-        this.valor = valor;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public void setDescricao(String descricao) {
-        this.descricao = descricao;
-    }
-
-    public LocalDateTime getCriadoEm() {
-        return criadoEm;
-    }
-
-    public void setCriadoEm(LocalDateTime criadoEm) {
-        this.criadoEm = criadoEm;
-    }
+    public LocalDateTime getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
 }
